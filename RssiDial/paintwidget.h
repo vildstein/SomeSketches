@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+//class QPainter;
+
 class PaintWidget : public QWidget
 {
 	Q_OBJECT

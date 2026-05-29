@@ -30,22 +30,40 @@ void PaintWidget::paintEvent(QPaintEvent* event)
 	QPainter painter(this);
 	painter.setRenderHint(QPainter::Antialiasing);
 
-	int side = qMin(width(), height());
+	//int side = qMin(width(), height());
 	// Перенеосим рисование в середину виджета
 	//painter.translate(width() / 2, height() / 2);
-	painter.translate(10, 10);
+
+	//painter.save();
+	// Перенеосим на 10 пикселей в левый нижий угол
+	painter.translate(20, height() - 20);
+
+	//painter.translate(10, 10);
+	//painter.restore();
+
 	// Приближам изображение
-	painter.scale(side / 200.0, side / 200.0);
+	//painter.scale(side / 200.0, side / 200.0);
 
-	QColor blueColor(Qt::blue);
-	painter.setBrush(blueColor);
-	painter.setPen(blueColor);
 
-	QLine xAxis({0, 0}, {width(), 0});
-	QLine yAxis({0, 0}, {0, height()});
+
+	//QColor blueColor(Qt::blue);
+	// ОСИ
+
+	QColor blackColor(Qt::black);
+	painter.setBrush(Qt::NoBrush);
+	painter.setPen(blackColor);
+
+	QLine xAxis({-10, 0}, {width() - 35, 0});
+	QLine yAxis({0, 10}, {0, -height() + 35});
 
 	painter.drawLine(xAxis);
 	painter.drawLine(yAxis);
+	// END ОСИ
+
+	//
+
+
+
 
 	painter.drawPolyline(m_pol);
 
