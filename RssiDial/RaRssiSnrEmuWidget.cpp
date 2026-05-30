@@ -102,6 +102,7 @@ void RaRssiSnrEmuWidget::onDialValueChanged(int val)
 		QSignalBlocker sb(m_spinBoxOfDial);
 		val >= 180 ? (summ = val - 180) : (summ = 180 + val);
 		m_spinBoxOfDial->setValue(summ);
+		emit azimuthChanged(summ);
 	}
 
 	m_angleBottomOffset = static_cast<double>(summ);
@@ -113,10 +114,14 @@ void RaRssiSnrEmuWidget::onDialValueChanged(int val)
 
 void RaRssiSnrEmuWidget::onSpinBoxOfDialValueChanged(int val)
 {
-	QSignalBlocker sb(m_directionDial);
+
 	int summ{0};
-	val > 180 ? (summ = val - 180) : (summ = 180 + val);
-	m_directionDial->setValue(summ);
+	{
+		QSignalBlocker sb(m_directionDial);
+		val > 180 ? (summ = val - 180) : (summ = 180 + val);
+		m_directionDial->setValue(summ);
+		emit azimuthChanged(summ);
+	}
 
 	m_angleBottomOffset = static_cast<double>(val);
 	m_angleTopOffset = static_cast<double>(val);

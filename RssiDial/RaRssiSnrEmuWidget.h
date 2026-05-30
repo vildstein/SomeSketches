@@ -20,6 +20,7 @@ public:
 
 signals:
 	void proceedRssiSignal(qint32 rssi, qint32 snr);
+	void azimuthChanged(int az);
 
 //protected:
 	//virtual void mousePressEvent(QMouseEvent *event) override;
