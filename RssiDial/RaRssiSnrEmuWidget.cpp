@@ -31,8 +31,11 @@ RaRssiSnrEmuWidget::RaRssiSnrEmuWidget(QWidget* parent) :
 	m_spinBoxOfDial->setRange(0, 359);
 	m_spinBoxOfDial->setSuffix(" гр");
 	auto dialLay = new QGridLayout;
-	dialLay->addWidget(new QLabel(tr("Борт находится")), 0, 0, Qt::AlignCenter);
-	dialLay->addWidget(m_spinBoxOfDial, 1, 0, Qt::AlignCenter);
+	m_azForSignalLab = new QLabel(tr("Сигнал отправляется на азимут: "));
+	dialLay->addWidget(m_azForSignalLab, 0, 0, Qt::AlignCenter);
+	m_azLabel = new QLabel(tr("Борт находится по азимуту: "));
+	dialLay->addWidget(m_azLabel, 1, 0, Qt::AlignHCenter | Qt::AlignTop);
+	dialLay->addWidget(m_spinBoxOfDial, 2, 0, Qt::AlignHCenter | Qt::AlignTop);
 	m_directionDial->setLayout(dialLay);
 
 	m_timerSB = new QSpinBox;
@@ -79,19 +82,19 @@ RaRssiSnrEmuWidget::RaRssiSnrEmuWidget(QWidget* parent) :
 
 #include <QDebug>
 
-void RaRssiSnrEmuWidget::setCurrentDirectionAngle(const QPoint& incomePositon)
-{
-	//Q_UNUSED(uavComplexId);
-	//auto raDirectionStruct  = UavComplexNS::raDirectionFromByteArray(ba);
+// void RaRssiSnrEmuWidget::setCurrentDirectionAngle(const QPoint& incomePositon)
+// {
+// 	//Q_UNUSED(uavComplexId);
+// 	//auto raDirectionStruct  = UavComplexNS::raDirectionFromByteArray(ba);
 
-	auto thisPos = pos();
-	auto angle = QLineF(thisPos, incomePositon).angle();
+// 	auto thisPos = pos();
+// 	auto angle = QLineF(thisPos, incomePositon).angle();
 
-	qInfo() << angle;
+// 	qInfo() << angle;
 
-	m_azimuth = angle;
-	m_angle = angle;
-}
+// 	m_azimuth = angle;
+// 	m_angle = angle;
+// }
 
 RaRssiSnrEmuWidget::~RaRssiSnrEmuWidget() = default;
 
@@ -99,9 +102,11 @@ void RaRssiSnrEmuWidget::onDialValueChanged(int val)
 {
 	int summ{0};
 	{
-		QSignalBlocker sb(m_spinBoxOfDial);
+		//QSignalBlocker sb(m_spinBoxOfDial);
 		val >= 180 ? (summ = val - 180) : (summ = 180 + val);
-		m_spinBoxOfDial->setValue(summ);
+		//m_spinBoxOfDial->setValue(summ);
+		QString text("Сигнал отправляется на азимут: ");
+		m_azForSignalLab->setText(QString(text + QString::number(summ)));
 		emit azimuthChanged(summ);
 	}
 
@@ -115,19 +120,26 @@ void RaRssiSnrEmuWidget::onDialValueChanged(int val)
 void RaRssiSnrEmuWidget::onSpinBoxOfDialValueChanged(int val)
 {
 
-	int summ{0};
-	{
-		QSignalBlocker sb(m_directionDial);
-		val > 180 ? (summ = val - 180) : (summ = 180 + val);
-		m_directionDial->setValue(summ);
-		emit azimuthChanged(summ);
-	}
+	m_azimuth = static_cast<double>(val);
+	m_azLabel->clear();
+	QString text("Борт находится по азимуту: ");
+	m_azLabel->setText(QString(text + QString::number(m_azimuth)));
+	emit boardAzChanged(m_azimuth);
 
-	m_angleBottomOffset = static_cast<double>(val);
-	m_angleTopOffset = static_cast<double>(val);
 
-	m_angleBottomOffset -= m_angleDelta;
-	m_angleTopOffset += m_angleDelta;
+	// int summ{0};
+	// {
+	// 	QSignalBlocker sb(m_directionDial);
+	// 	val > 180 ? (summ = val - 180) : (summ = 180 + val);
+	// 	m_directionDial->setValue(summ);
+	// 	emit azimuthChanged(summ);
+	// }
+
+	// m_angleBottomOffset = static_cast<double>(val);
+	// m_angleTopOffset = static_cast<double>(val);
+
+	// m_angleBottomOffset -= m_angleDelta;
+	// m_angleTopOffset += m_angleDelta;
 }
 
 void RaRssiSnrEmuWidget::startOrStopRssiTimer(bool checked)
@@ -170,7 +182,7 @@ void RaRssiSnrEmuWidget::onTimerSpinBoxValueChanged(int val)
 
 QVBoxLayout* RaRssiSnrEmuWidget::createRssiAndSnrConfigLayout()
 {
-	auto crateLine = []()->QLabel*{
+	auto createLine = []()->QLabel*{
 			auto lineLabel = new QLabel;
 			lineLabel->setFrameStyle(QFrame::HLine | QFrame::Plain);
 			lineLabel->setLineWidth(4);
@@ -289,13 +301,12 @@ QVBoxLayout* RaRssiSnrEmuWidget::createRssiAndSnrConfigLayout()
 
 
 	auto mainVertLay = new QVBoxLayout;
-	mainVertLay->addWidget(crateLine());
+	mainVertLay->addWidget(createLine());
 	mainVertLay->addLayout(minRssiOnBoardLay);
 	mainVertLay->addLayout(maxRssiOnBoardLay);
 	mainVertLay->addLayout(minSNROnBoardLay);
 	mainVertLay->addLayout(maxSNROnBoardLay);
-	mainVertLay->addWidget(crateLine());
-	mainVertLay->addWidget(crateLine());
+	mainVertLay->addWidget(createLine());
 	mainVertLay->addLayout(minRssiOutBoardLay);
 	mainVertLay->addLayout(maxRssiOutBoardLay);
 	mainVertLay->addLayout(minSNROutBoardLay);

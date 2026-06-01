@@ -12,8 +12,9 @@ int main(int argc, char *argv[])
 	wid->setAttribute(Qt::WA_DeleteOnClose, true);
 
 	QObject::connect(wid, &RaRssiSnrEmuWidget::proceedRssiSignal, w, &PaintWidget::someThingChanged);
-	QObject::connect(w, &PaintWidget::positionChanged, wid, &RaRssiSnrEmuWidget::setCurrentDirectionAngle);
+	//QObject::connect(w, &PaintWidget::positionChanged, wid, &RaRssiSnrEmuWidget::setCurrentDirectionAngle);
 	QObject::connect(wid, &RaRssiSnrEmuWidget::azimuthChanged, w, &PaintWidget::onAzimuthChanged);
+	QObject::connect(wid, &RaRssiSnrEmuWidget::boardAzChanged, w, &PaintWidget::setBoardAz);
 
 	emit wid->azimuthChanged(24);
 
@@ -23,7 +24,7 @@ int main(int argc, char *argv[])
 	wid->show();
 	w->show();
 
-	emit w->positionChanged(wid->pos());
+	emit wid->boardAzChanged(24);
 
 	auto result = a.exec();
 	return result;

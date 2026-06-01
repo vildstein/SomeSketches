@@ -7,6 +7,7 @@ class QSpinBox;
 class QDial;
 class QTimer;
 class QVBoxLayout;
+class QLabel;
 
 class RaRssiSnrEmuWidget : public QFrame
 {
@@ -16,11 +17,12 @@ public:
 	explicit RaRssiSnrEmuWidget(QWidget* parent = nullptr);
 	virtual ~RaRssiSnrEmuWidget();
 
-	void setCurrentDirectionAngle(const QPoint& pos);
+	//void setCurrentDirectionAngle(const QPoint& pos);
 
 signals:
 	void proceedRssiSignal(qint32 rssi, qint32 snr);
 	void azimuthChanged(int az);
+	void boardAzChanged(int az);
 
 //protected:
 	//virtual void mousePressEvent(QMouseEvent *event) override;
@@ -42,9 +44,12 @@ private:
 	QSpinBox* m_spinBoxOfDial{nullptr};
 	QSpinBox* m_timerSB{nullptr};
 	QDial* m_directionDial{nullptr};
-	QTimer* m_rssiTimer;
+	QTimer* m_rssiTimer{nullptr};;
 	QRandomGenerator m_rssiRandomizer;
 	QRandomGenerator m_snrRandomizer;
+
+	QLabel* m_azForSignalLab{nullptr};
+	QLabel* m_azLabel{nullptr};
 
 	double m_angle{0.0};
 	double m_azimuth{0.0};

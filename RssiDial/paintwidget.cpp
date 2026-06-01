@@ -14,14 +14,16 @@
 constexpr const int rectWidth{15};
 constexpr const int rectInitialHeigth{10};
 constexpr const int betweenRectDistance{20};
+constexpr const int EMA_period{4};
+
 
 PaintWidget::PaintWidget(QWidget *parent)
 	: QWidget(parent)//, m_rect(0, 0, 40, 80)
 {
+	setBackgroundRole(QPalette::Dark);
+	setAutoFillBackground(true);
+	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-	// fm_pol << QPoint{0,0} << QPoint{5,5} << QPoint{10,8} << QPoint{15,15} << QPoint{20,15} << QPoint{25,15};
-
-	//m_rect = QRect(20, 40, 50, -80);
 
 	QFutureWatcher<decltype(m_rectVec)>* fw = new QFutureWatcher<decltype(m_rectVec)>(this);
 
@@ -31,11 +33,8 @@ PaintWidget::PaintWidget(QWidget *parent)
 		if (!vec.empty()) {
 			m_rectVec = vec;
 		}
-
 		createLine(vec);
-
-		countSimpleMA(4);
-
+		countSimpleMA(EMA_period);
 		fw->deleteLater();
 	};
 
@@ -53,12 +52,9 @@ void PaintWidget::someThingChanged(qint32 rssi, qint32 snr)
 {
 	auto rss{100};
 	rss += rssi;
-	//auto& rect = m_rectVec[4];
-	//m_rect.setHeight(rss);
 	m_rectVec[m_az].setHeight(rss);
 	m_redLinePoligon[m_az].setY(m_rectVec[m_az].height());
-	//m_redLinePoligon[m_az].setY(rssi);
-	countSimpleMA(9);
+	countSimpleMA(EMA_period);
 	update();
 	qInfo() << rssi;
 	qInfo() << rss;
@@ -71,6 +67,13 @@ void PaintWidget::onAzimuthChanged(int az)
 	} else {
 		m_az = 0;
 	}
+	update();
+}
+
+void PaintWidget::setBoardAz(int azVal)
+{
+	m_boardAz = azVal;
+	update();
 }
 
 
@@ -108,24 +111,31 @@ void PaintWidget::paintEvent(QPaintEvent* event)
 
 
 	if (m_isMA_shown == true) {
-		QPen pen(QBrush(Qt::red), 4);
+		QPen pen(QBrush(Qt::yellow), 2);
 		painter.setPen(pen);
 		painter.drawPolyline(m_redLinePoligon);
 
-		QPen yellPen(QBrush(Qt::yellow), 2);
-		painter.setPen(yellPen);
+		QPen redPen(QBrush(Qt::red), 4);
+		painter.setPen(redPen);
 		painter.drawPolyline(m_MA);
 	}
 
 	painter.restore();
 
+	painter.drawText(10, -height() + 50, QString::number(m_az));
+
+	QPen greenPen(Qt::green);
+	QBrush gb(Qt::green);
+	painter.setPen(greenPen);
+	painter.setBrush(gb);
+	painter.drawEllipse(-m_rectVec[m_boardAz].x(), -100, rectWidth, 20);
 }
 
-void PaintWidget::moveEvent(QMoveEvent* event)
-{
-	auto point =  event->pos();
-	emit positionChanged(point);
-}
+// void PaintWidget::moveEvent(QMoveEvent* event)
+// {
+// 	auto point =  event->pos();
+// 	emit positionChanged(point);
+// }
 
 void PaintWidget::mouseDoubleClickEvent(QMouseEvent* event)
 {
@@ -139,7 +149,7 @@ QVector<QRect> PaintWidget::createRectVector()
 	QVector<QRect> vec;
 	int xCoord{0};
 
-	for (size_t i = 0; i < 359; ++i) {
+	for (size_t i = 0; i < 360; ++i) {
 
 		QRect rect(xCoord, 0, rectWidth, rectInitialHeigth);
 		vec.push_back(rect);
