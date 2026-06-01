@@ -57,7 +57,8 @@ void PaintWidget::someThingChanged(qint32 rssi, qint32 snr)
 	//m_rect.setHeight(rss);
 	m_rectVec[m_az].setHeight(rss);
 	m_redLinePoligon[m_az].setY(m_rectVec[m_az].height());
-	countSimpleMA(15);
+	//m_redLinePoligon[m_az].setY(rssi);
+	countSimpleMA(9);
 	update();
 	qInfo() << rssi;
 	qInfo() << rss;
@@ -196,8 +197,8 @@ void PaintWidget::countSimpleMA(int period)
 
 	m_MA = m_redLinePoligon;
 
-	for (int index = 0; index < m_redLinePoligon.size(); ++index) {
-		auto yCoord = yCoords[index];
+	for (int index = 0; index < m_MA.size(); ++index) {
+		auto yCoord = maValues[index];
 		m_MA[index].setY(yCoord);
 	}
 }
