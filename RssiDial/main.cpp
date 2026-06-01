@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
 	wid->show();
 	w->show();
 
+	emit w->positionChanged(wid->pos());
+
 	auto result = a.exec();
 	return result;
 }

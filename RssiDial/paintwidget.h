@@ -23,16 +23,29 @@ signals:
 protected:
 	virtual void paintEvent(QPaintEvent *event) override;
 	virtual void moveEvent(QMoveEvent *event) override;
+	virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 
 private:
 	QVector<QRect> createRectVector();
-	QPolygon m_pol;
+	void countSimpleMA(int period);
+
+	void createLine(const QVector<QRect>& rect);
+
+
+	QPolygon m_redLinePoligon;
+
+	QPolygon m_MA;
+
 	QRect m_rect;
+
+	QLine m_mALine;
 
 	QVector<QRect> m_rectVec;
 
 	int m_az{0};
+
+	bool m_isMA_shown{false};
 
 	//Q
 
