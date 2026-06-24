@@ -1,6 +1,31 @@
 import QtQuick 2.15
+//import QtQuick.Controls 1.4
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+//import QtQuick.Layouts 1.15
+
+
+// Canvas {
+
+// 	id : headerLine
+
+// 	width: 100
+// 	height: 50
+
+// 	onPaint: {
+// 		var drawContext = getContext("2d");
+// 		//drawContext.fillStyle = Qt.rgba(1, 0, 0, 1);
+// 		//drawContext.fillRect(0, 0, width, height);
+
+// 		drawContext.lineWidth = 2;
+// 		//drawContext.moveTo(0, 0);
+// 		drawContext.beginPath()
+// 		drawContext.lineTo(width, height);
+// 		drawContext.closePath()
+// 	}
+// }
+
+
+
 
 Rectangle {
 	id : parentRect
@@ -18,34 +43,39 @@ Rectangle {
 	property alias parentRectHeight: parentRect.height
 
 	signal shitChanged(width: int, height: int);
-	signal startScanning()
+	signal startScanning();
+	signal widgetsVisibilityChanged(vis: bool);
+
+	property int betwWidMarg : 13
 
 	Text {
 		id : header
 
-		x: 3
+		x: 5
 		y: 10
 
-		text: "Scanning"
-		font.family : qsTr("Segoe UI")
+		text: qsTr("Scanning")
+		font.family : "Segoe UI"
 		font.bold: true
 		font.pointSize: 10
 	}
 
-	Rectangle {
-		id : startScanRect // Заменить на Item
-		border.color: "black"
+	Item {
+		id : startScanRect
 
 		width: parentRect.width - 6
 		height: 30
 
 		x: 3
-		y: 35
+		anchors.top: header.bottom
+		anchors.topMargin: 10
 
 		Text {
 			id : startScanText
-			text: "Run mode"
-			font.family : qsTr("Segoe UI")
+			width: 80
+
+			text: qsTr("Run mode:")
+			font.family : "Segoe UI"
 			font.bold: false
 			font.pointSize: 9
 
@@ -56,13 +86,13 @@ Rectangle {
 
 		Button {
 			id : startScanBtn
-			width : 285
+			width : 280
 			height: 25
 			text: qsTr("Start Scanning")
 
 			anchors.verticalCenter: startScanRect.verticalCenter
 			anchors.left: startScanText.right
-			anchors.leftMargin: 10
+			anchors.leftMargin: betwWidMarg
 
 			onClicked: parentRect.startScanning()
 
@@ -75,30 +105,117 @@ Rectangle {
 
 			anchors.verticalCenter: startScanRect.verticalCenter
 			anchors.left: startScanBtn.right
-			anchors.leftMargin: 8
+			anchors.leftMargin: betwWidMarg
 
-			onClicked: parentRect.shitChanged(parentRect.parentRectWidth, parentRect.parentRectHeight)
+			function proceedButtonClick() {
+
+				var isVisible = true;
+
+				if (scanAnglesRangeRect.visible == true) {
+					isVisible = false;
+					scanAnglesRangeRect.visible = isVisible;
+					angleStepRect.visible = isVisible;
+				} else {
+					isVisible = true;
+					scanAnglesRangeRect.visible = isVisible;
+					angleStepRect.visible = isVisible;
+				}
+
+				parentRect.widgetsVisibilityChanged(isVisible);
+				parentRect.shitChanged(parentRect.parentRectWidth, parentRect.parentRectHeight);
+			}
+
+			onClicked: proceedButtonClick()
 		}
 	}
 
-	Canvas {
+	Item {
+		id : scanAnglesRangeRect
 
-		id : headerLine
+		width: parentRect.width - 6
+		height: startScanRect.height
 
-		width: 100
-		height: 50
+		anchors.left : startScanRect.left
+		anchors.top: startScanRect.bottom
+		anchors.topMargin: 10
 
-		onPaint: {
-			var drawContext = getContext("2d");
-			//drawContext.fillStyle = Qt.rgba(1, 0, 0, 1);
-			//drawContext.fillRect(0, 0, width, height);
+		Text {
+			id : scanAngleText
+			width: startScanText.width
 
-			drawContext.lineWidth = 2;
-			//drawContext.moveTo(0, 0);
-			drawContext.beginPath()
-			drawContext.lineTo(width, height);
-			drawContext.closePath()
+			text: qsTr("Scan Angle:")
+			font.family : "Segoe UI"
+			font.bold: false
+			font.pointSize: 9
+
+			anchors.verticalCenter: scanAnglesRangeRect.verticalCenter
+			anchors.left: scanAnglesRangeRect.left
+			anchors.leftMargin: 5
 		}
+
+		SpinBox {
+			id: angleRangeSpinBox
+
+			width: startScanBtn.width
+			height: startScanBtn.height
+
+			anchors.verticalCenter: scanAnglesRangeRect.verticalCenter
+			anchors.left: scanAngleText.right
+			anchors.leftMargin: betwWidMarg
+
+			from: 1
+			to: 360
+
+			value: 360
+			editable: true
+
+			property string suffix: "o"
+
+			valueFromText: function(text, locale) {
+					return Number.fromLocaleString(locale, numberExtractionRegExp.exec(text)[1])
+				}
+		}
+
+		Button {
+			id : saveSomeShitButton
+			width : 26
+			height: 26
+
+			anchors.verticalCenter: angleRangeSpinBox.verticalCenter
+			anchors.left: angleRangeSpinBox.right
+			anchors.leftMargin: betwWidMarg
+		}
+
 	}
+
+	Item {
+		id : angleStepRect
+
+		width: parentRect.width - 6
+		height: startScanRect.height
+
+		anchors.left : scanAnglesRangeRect.left
+		anchors.top: scanAnglesRangeRect.bottom
+		anchors.topMargin: 10
+
+		Text {
+			id: scanStepText
+			width: startScanText.width
+			text: qsTr("Scan Step:")
+
+			font.family : "Segoe UI"
+			font.bold: false
+			font.pointSize: 9
+
+			anchors.verticalCenter: angleStepRect.verticalCenter
+			anchors.left: angleStepRect.left
+			anchors.leftMargin: 5
+		}
+
+
+
+
+	}
+
 }
 

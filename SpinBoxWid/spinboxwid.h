@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+class QQuickWidget;
+
 class SpinBoxWid : public QWidget
 {
 	Q_OBJECT
@@ -12,10 +14,12 @@ public:
 	virtual ~SpinBoxWid();
 
 public slots:
-	void fuckOffSlot(int wid, int height);
+	//void fuckOffSlot(int wid, int height);
 	void startScanning();
+	void onAngleInputVisChanged(bool isVisuble);
 
 private:
+	QQuickWidget* qmlWid{nullptr};
 
 };
 #endif // SPINBOXWID_H
