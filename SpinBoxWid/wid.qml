@@ -3,30 +3,6 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 //import QtQuick.Layouts 1.15
 
-
-// Canvas {
-
-// 	id : headerLine
-
-// 	width: 100
-// 	height: 50
-
-// 	onPaint: {
-// 		var drawContext = getContext("2d");
-// 		//drawContext.fillStyle = Qt.rgba(1, 0, 0, 1);
-// 		//drawContext.fillRect(0, 0, width, height);
-
-// 		drawContext.lineWidth = 2;
-// 		//drawContext.moveTo(0, 0);
-// 		drawContext.beginPath()
-// 		drawContext.lineTo(width, height);
-// 		drawContext.closePath()
-// 	}
-// }
-
-
-
-
 Rectangle {
 	id : parentRect
 	width: 200
@@ -58,6 +34,25 @@ Rectangle {
 		font.family : "Segoe UI"
 		font.bold: true
 		font.pointSize: 10
+	}
+
+	Canvas {
+
+	id : headerLine
+
+	anchors.verticalCenter: header.verticalCenter
+	anchors.left: header.right
+	anchors.leftMargin: 4
+
+	width: parent.width - 88
+	height: 3
+
+	onPaint: {
+
+		var drawContext = getContext("2d");
+		drawContext.fillStyle = "black";
+		drawContext.fillRect(0, 0, width, height);
+	}
 	}
 
 	Item {
@@ -153,7 +148,7 @@ Rectangle {
 			anchors.leftMargin: 5
 		}
 
-		SpinBox {
+		SpinBox { // Поставить валидатор
 			id: angleRangeSpinBox
 
 			width: startScanBtn.width
@@ -210,6 +205,56 @@ Rectangle {
 			anchors.verticalCenter: angleStepRect.verticalCenter
 			anchors.left: angleStepRect.left
 			anchors.leftMargin: 5
+		}
+
+		SpinBox { // Поставить валидатор
+			id: angleStepSpinBox
+
+			width: angleRangeSpinBox.width
+			height: angleRangeSpinBox.height
+
+			anchors.verticalCenter: angleStepRect.verticalCenter
+			anchors.left: scanStepText.right
+			anchors.leftMargin: betwWidMarg
+
+			from: 1
+			to: 180
+
+			value: 3
+			editable: true
+
+			property string suffix: "o"
+
+			valueFromText: function(text, locale) {
+					return Number.fromLocaleString(locale, numberExtractionRegExp.exec(text)[1])
+				}
+		}
+
+		Rectangle {
+			id : saveSomethingBnt
+
+			width: saveSomeShitButton.width
+			height: saveSomeShitButton.height
+
+			anchors.verticalCenter: angleStepSpinBox.verticalCenter
+			anchors.left: angleStepSpinBox.right
+			anchors.leftMargin: betwWidMarg
+
+			color: "silver"
+			border.color: "black"
+
+			border.width: 1
+			radius : 3
+
+			MouseArea {
+				id : mouseEventHandler
+				anchors.fill: parent
+
+				onPressed: { parent.color = "lightsteelblue"; } // Посмотреть градиенты
+				onReleased:{ parent.color = "silver"; }
+
+			}
+
 		}
 
 
