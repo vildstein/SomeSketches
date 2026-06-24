@@ -11,116 +11,93 @@ Rectangle {
 	border.width: 2
 	radius: 5
 
+	onWidthChanged : console.log(width)
+	onHeightChanged : console.log(height)
 
-	ColumnLayout {
-		id : mainLay
-		anchors.fill: parent
-		spacing: 2
-		Layout.alignment: Qt.AlignTop
+	property alias parentRectWidth:  parentRect.width
+	property alias parentRectHeight: parentRect.height
 
-		Rectangle {
-			id : rowLayRect
-			Layout.fillWidth: true
-			Layout.fillHeight: true
-			border.color: "black"
+	signal shitChanged(width: int, height: int);
+	signal startScanning()
 
-			Layout.minimumWidth: 50
-			Layout.preferredWidth: 280
-			Layout.maximumWidth: 350
+	Text {
+		id : header
 
-			Layout.minimumHeight: header.font.pointSize + 4
-			Layout.preferredHeight: header.font.pointSize + 8
-			Layout.maximumHeight : header.font.pointSize + 10
-			//Layout.alignment : Qt.AlignHCenter
+		x: 3
+		y: 10
 
-			Layout.leftMargin : 10
+		text: "Scanning"
+		font.family : qsTr("Segoe UI")
+		font.bold: true
+		font.pointSize: 10
+	}
 
-			Text {
-				id : header
-				text: "Scanning"
-				font.family : qsTr("Segoe UI")
-				font.bold: true
-				font.pointSize: 12
-			}
+	Rectangle {
+		id : startScanRect // Заменить на Item
+		border.color: "black"
+
+		width: parentRect.width - 6
+		height: 30
+
+		x: 3
+		y: 35
+
+		Text {
+			id : startScanText
+			text: "Run mode"
+			font.family : qsTr("Segoe UI")
+			font.bold: false
+			font.pointSize: 9
+
+			anchors.verticalCenter: startScanRect.verticalCenter
+			anchors.left: startScanRect.left
+			anchors.leftMargin: 5
 		}
 
-		// RowLayout {
-		// 	id : headerLay
-		// 	//anchors.left : parent.left
-		// 	//anchors.leftMargin: 10
-		// 	Layout.fillWidth: true
-		// 	//Layout.alignment : Qt.AlignLeft
-		// 	Layout.alignment : Qt.AlignTop
+		Button {
+			id : startScanBtn
+			width : 285
+			height: 25
+			text: qsTr("Start Scanning")
 
-		// 	Layout.minimumWidth: 50
-		// 	Layout.preferredWidth: 280
-		// 	Layout.maximumWidth: 350
+			anchors.verticalCenter: startScanRect.verticalCenter
+			anchors.left: startScanText.right
+			anchors.leftMargin: 10
 
-		// 	Layout.minimumHeight: header.font.pointSize
-		// 	Layout.preferredHeight: header.font.pointSize + 5
-		// 	Layout.maximumHeight : header.font.pointSize + 8
+			onClicked: parentRect.startScanning()
 
-		// 	Layout.leftMargin : 10
-		// 	Layout.topMargin : 5
+		}
 
+		Button {
+			id : scanningSettingsBtn
+			width : 26
+			height: 26
 
-		// }
+			anchors.verticalCenter: startScanRect.verticalCenter
+			anchors.left: startScanBtn.right
+			anchors.leftMargin: 8
 
-		RowLayout {
-			id: runModeLayout
-			Layout.alignment: Qt.AlignTop
+			onClicked: parentRect.shitChanged(parentRect.parentRectWidth, parentRect.parentRectHeight)
+		}
+	}
 
-			Layout.minimumWidth: 50
-			Layout.preferredWidth: 280
-			Layout.maximumWidth: 350
+	Canvas {
 
-			Layout.minimumHeight: startScanBtn.height
-			Layout.preferredHeight: startScanBtn.height + 5
-			Layout.maximumHeight : startScanBtn.height + 8
+		id : headerLine
 
-			Layout.leftMargin : 5
+		width: 100
+		height: 50
 
-			Rectangle {
-				id : rowLayRect2
-				border.color: "black"
-				Layout.fillWidth: true
-				Layout.fillHeight: true
-				Layout.alignment : Qt.AlignLeft
+		onPaint: {
+			var drawContext = getContext("2d");
+			//drawContext.fillStyle = Qt.rgba(1, 0, 0, 1);
+			//drawContext.fillRect(0, 0, width, height);
 
-				RowLayout {
-					id : startScanWidLay
-					Layout.fillWidth: true
-					Layout.fillHeight: true
-
-
-
-					Text {
-						id : startScanText
-						text: "Run mode"
-						font.family : qsTr("Segoe UI")
-						font.bold: false
-						font.pointSize: 12
-						Layout.alignment : Qt.AlignHCenter
-						Layout.leftMargin : 15
-					}
-
-					Button {
-						id : startScanBtn
-						width : 285
-						height: 25
-						text: qsTr("Start Scanning")
-					}
-
-					Button {
-						id : scanningSettingsBtn
-						width : 26
-						height: 26
-						text: qsTr("Start Scanning")
-					}
-				}
-
-
-			}
+			drawContext.lineWidth = 2;
+			//drawContext.moveTo(0, 0);
+			drawContext.beginPath()
+			drawContext.lineTo(width, height);
+			drawContext.closePath()
 		}
 	}
 }
