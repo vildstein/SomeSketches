@@ -19,7 +19,7 @@ public slots:
 	void onAngleInputVisChanged(bool isVisuble);
 
 private:
-	QQuickWidget* qmlWid{nullptr};
+	QQuickWidget* m_startScanning{nullptr};
 
 };
 #endif // SPINBOXWID_H

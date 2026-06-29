@@ -10,7 +10,7 @@ Rectangle {
 	color: "silver"
 	border.color: "black"
 	border.width: 2
-	radius: 5
+	radius: 15
 
 	onWidthChanged : console.log(width)
 	onHeightChanged : console.log(height)

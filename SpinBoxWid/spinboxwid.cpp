@@ -11,26 +11,25 @@ SpinBoxWid::SpinBoxWid(QWidget *parent)
 	: QWidget(parent)
 {
 	QVBoxLayout* lay = new QVBoxLayout;
-	qmlWid = new QQuickWidget;
-	qmlWid->setAttribute(Qt::WA_DeleteOnClose);
-	connect(qmlWid, &QQuickWidget::destroyed, qApp, &QApplication::quit);
+	m_startScanning = new QQuickWidget;
+	m_startScanning->setAttribute(Qt::WA_DeleteOnClose);
+	connect(m_startScanning, &QQuickWidget::destroyed, qApp, &QApplication::quit);
 
-	qmlWid->setResizeMode(QQuickWidget::SizeRootObjectToView);
-	qmlWid->setMinimumHeight(160);
-	qmlWid->setMinimumWidth(435);
-	qmlWid->resize(410, 160);
+	m_startScanning->setResizeMode(QQuickWidget::SizeRootObjectToView);
+	m_startScanning->setMinimumHeight(160);
+	m_startScanning->setMinimumWidth(435);
+	m_startScanning->resize(410, 160);
 
 	QUrl file(("qrc:/wid.qml"));
-	qmlWid->setSource(file);
-
-	lay->addWidget(qmlWid);
-	setLayout(lay);
-
-	resize(sizeHint());
+	m_startScanning->setSource(file);
 
 	//connect(qmlWid->rootObject(), SIGNAL(shitChanged(int,int)), this, SLOT(fuckOffSlot(int,int)));
-	connect(qmlWid->rootObject(), SIGNAL(widgetsVisibilityChanged(bool)), this, SLOT(onAngleInputVisChanged(bool)));
-	connect(qmlWid->rootObject(), SIGNAL(startScanning()), this, SLOT(startScanning()));
+	connect(m_startScanning->rootObject(), SIGNAL(widgetsVisibilityChanged(bool)), this, SLOT(onAngleInputVisChanged(bool)));
+	connect(m_startScanning->rootObject(), SIGNAL(startScanning()), this, SLOT(startScanning()));
+
+	lay->addWidget(m_startScanning);
+	setLayout(lay);
+	resize(sizeHint());
 }
 
 SpinBoxWid::~SpinBoxWid() = default;
@@ -43,9 +42,9 @@ void SpinBoxWid::startScanning()
 void SpinBoxWid::onAngleInputVisChanged(bool isVisuble)
 {
 	if (isVisuble == true) {
-		qmlWid->setMinimumHeight(160);
+		m_startScanning->setMinimumHeight(160);
 	} else {
-		qmlWid->setMinimumHeight(80);
+		m_startScanning->setMinimumHeight(80);
 	}
 }
 
