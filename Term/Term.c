@@ -1,4 +1,4 @@
-#include "skel_defines.h"
+// Taken from the book Advanced Programming in the Unix Environment of W. Richard Stevens
 
 #include <termio.h>
 #include <errno.h>
@@ -11,22 +11,12 @@
 #include <strings.h>
 #include <string.h>
 
-ERROR_FORWARD_DECL
-UDP_CLIENT_FORWARD
-CLIENT_FUNC_FORWARD_DECL
-SET_ADDRESS_FORWARD_DECL
-
 #define MAXLINE 4048
 int daemon_proc;
-
-static void goLeftMessage(SOCKET sock, SIN* peer);
-static void goRightMessage(SOCKET sock, SIN* peer);
-static void stopMessage(SOCKET sock, SIN* peer);
 
 static struct termios save_termios;
 static int ttysavefd = -1;
 static enum { RESET, RAW, CBREAK } ttystate = RESET;
-
 
 /* перевести терминал в режим посимвольного ввода */
 int tty_cbreak(int fd)
@@ -80,7 +70,7 @@ int tty_cbreak(int fd)
 	return(0);
 }
 
-
+/* перевести терминал в режим прозрачного ввода (raw) */
 int tty_raw(int fd)  {
 
 	int err;
@@ -169,7 +159,6 @@ int tty_raw(int fd)  {
 
 	ttystate = RAW;
 	ttysavefd = fd;
-
 	return(0);
 }
 
@@ -185,6 +174,14 @@ int tty_reset(int fd)
 	}
 	ttystate = RESET;
 	return(0);
+}
+
+/* может быть установлена вызовом atexit(tty_atexit) */
+void tty_atexit(void)
+{
+	if (ttysavefd >= 0) {
+		tty_reset(ttysavefd);
+	}
 }
 
 static void err_doit(int errnoflag, int level, const char* fmt, va_list ap) {
@@ -223,6 +220,7 @@ void err_sys(const char* fmt, ...) {
 	exit(1);
 }
 
+
 /* позволить вызывающему процессу */
 /* узнать начальное состояние терминала */
 struct termios *tty_termios(void)
@@ -236,23 +234,10 @@ static void sig_catch(int signo) {
 	exit(0);
 }
 
-static int isStoped = TRUE;
+int main(void) {
 
-int main( int argc, char** argv ) {
-
-	SIN peer;
-	SOCKET sock;
-
-	char* host = "192.168.2.93";
-	char* portNumber = "6000";
-
-	const char* const left = "Left";
-	const char* const right = "Right";
-	const char* const up = "Up";
-	const char* const down = "Down";
-
-
-	INIT();
+	int i;
+	char c;
 
 	/* включить обработку сигналов */
 	if (signal(SIGINT, sig_catch) == SIG_ERR) {
@@ -267,156 +252,45 @@ int main( int argc, char** argv ) {
 		err_sys("ошибка вызова функции signal(SIGTERM)");
 	}
 
-	sock = udp_client(host, portNumber, &peer);
+	if (tty_raw(STDIN_FILENO) < 0) {
+		err_sys("ошибка вызова функции tty_raw");
+	}
 
-	int i;
-	char ch;
+	printf("Переход в режим raw, выход из режима по нажатию DELETE\n");
 
-	// настройка терминала
+	while ((i = read(STDIN_FILENO, &c, 1)) == 1) {
+		if ((c &= 255) == 0x7f/*0177*/) /* 0177 = ASCII DELETE */{
+			break;
+		}
+		printf("%o\n", c);
+	}
+
+	if (tty_reset(STDIN_FILENO) < 0) {
+		err_sys("ошибка вызова функции tty_reset");
+	}
+
+	if (i <= 0) {
+		err_sys("ошибка чтения");
+	}
+
 	if (tty_cbreak(STDIN_FILENO) < 0) {
 		err_sys("ошибка вызова функции tty_cbreak");
 	}
 
-	while ((i = read(STDIN_FILENO, &ch, 1)) == 1) {
-		if (ch == 'a' || ch == 'A') {
-			printf("%s\n", left);
-			goLeftMessage(sock, &peer);
-			//stopMessage(sock, &peer);
-		} else if (ch == 'd' || ch == 'D') {
-			printf("%s\n", right);
-			goRightMessage(sock, &peer);
-			//stopMessage(sock, &peer);
-		} else if (ch == 'w' || ch == 'W') {
-			printf("%s\n", up);
-		} else if (ch == 's' || ch == 'S') {
-			printf("%s\n", down);
-		} else {
-			stopMessage(sock, &peer);
-			ch &= 255;
-			printf("%o\n", ch);
-		}
+	printf("\nПереход в режим cbreak, выход из режима по сигналу SIGINT\n");
+
+	while ((i = read(STDIN_FILENO, &c, 1)) == 1) {
+		c &= 255;
+		printf("%o\n", c);
 	}
 
-	EXIT(0);
-}
-
-static void goLeftMessage(SOCKET sock, SIN* peer) {
-
-	const size_t messageSize = 7; // Bytes
-	char message[messageSize];
-
-	char firstByte = 0xff;
-	message[0] = firstByte;
-	char deviceIdByte = 0x01; // device Id
-	message[1] = deviceIdByte;
-
-	// Command 1
-	// Sense Reserved Reserved Auto/ Manual Scan Camera On/Off Iris Close Iris Open Focus Near
-	char Command_1_Byte = 0x00;
-	message[2] = Command_1_Byte;
-
-	// Command 2
-	// 0 0 0 0. 0 1 0 0
-	//Command 2 Focus_Far Zoom_Wide Zoom_Tele Tilt_Down Tilt_Up Pan_Left Pan_Right Fixed_to_0
-	char Command_2_Byte = 0x4;
-	message[3] = Command_2_Byte;
-
-	// Pan speed
-	char data_1_Byte = 0x3F;
-	message[4] = data_1_Byte;
-
-	// Tilt speed
-	char data_2_Byte = 0x00;
-	message[5] = data_2_Byte;
-
-	char checkSum_Byte = deviceIdByte + Command_1_Byte + Command_2_Byte + data_1_Byte + data_2_Byte;
-	message[6] = checkSum_Byte;
-
-	int peerlen = sizeof(*peer);
-
-	const int ZERO_FLAG = 0;
-
-	if ( sendto(sock, message, sizeof(message), ZERO_FLAG, (struct sockaddr*)peer, peerlen) < 0 ) {
-		error(1, errno, "SENT_TO FUNCTION MISTAKE");
+	if (tty_reset(STDIN_FILENO) < 0) {
+		err_sys("ошибка вызова функции tty_reset");
 	}
-}
 
-static void goRightMessage(SOCKET sock, SIN* peer) {
-
-	const size_t messageSize = 7; // Bytes
-	char message[messageSize];
-
-	char firstByte = 0xff;
-	message[0] = firstByte;
-	char deviceIdByte = 0x01; // device Id
-	message[1] = deviceIdByte;
-
-	// Command 1
-	// Sense Reserved Reserved Auto/ Manual Scan Camera On/Off Iris Close Iris Open Focus Near
-	char Command_1_Byte = 0x00;
-	message[2] = Command_1_Byte;
-
-	// Command 2
-	// 0 0 0 0. 0 0 1 0
-	//Command 2 Focus_Far Zoom_Wide Zoom_Tele Tilt_Down Tilt_Up Pan_Left Pan_Right Fixed_to_0
-	char Command_2_Byte = 0x02;
-	message[3] = Command_2_Byte;
-
-	// Pan speed
-	char data_1_Byte = 0x3F;
-	message[4] = data_1_Byte;
-
-	// Tilt speed
-	char data_2_Byte = 0x00;
-	message[5] = data_2_Byte;
-
-	char checkSum_Byte = deviceIdByte + Command_1_Byte + Command_2_Byte + data_1_Byte + data_2_Byte;
-	message[6] = checkSum_Byte;
-
-	int peerlen = sizeof(*peer);
-
-	const int ZERO_FLAG = 0;
-
-	if ( sendto(sock, message, sizeof(message), ZERO_FLAG, (struct sockaddr*)peer, peerlen) < 0 ) {
-		error(1, errno, "SENT_TO FUNCTION MISTAKE");
+	if (i <= 0) {
+		err_sys("ошибка чтения");
 	}
-}
 
-static void stopMessage(SOCKET sock, SIN* peer) {
-
-	const size_t messageSize = 7; // Bytes
-	char message[messageSize];
-
-	char firstByte = 0xff;
-	message[0] = firstByte;
-	char deviceIdByte = 0x01; // device Id
-	message[1] = deviceIdByte;
-
-	// Command 1
-	char Command_1_Byte = 0x00; // Sense Reserved Reserved Auto/ Manual Scan Camera On/Off Iris Close Iris Open Focus Near
-	message[2] = Command_1_Byte;
-
-	// Command 2
-	// 0 0 0 0. 0 0 0 0
-	char Command_2_Byte = 0x00; //Command 2 Focus_Far Zoom_Wide Zoom_Tele Tilt_Down Tilt_Up Pan_Left Pan_Right Fixed_to_0
-	message[3] = Command_2_Byte;
-
-	// Pan speed
-	char data_1_Byte = 0x00;
-	message[4] = data_1_Byte;
-
-	// Tilt speed
-	char data_2_Byte = 0x00;
-	message[5] = data_2_Byte;
-
-	char checkSum_Byte = deviceIdByte + Command_1_Byte + Command_2_Byte + data_1_Byte + data_2_Byte;
-	message[6] = checkSum_Byte;
-
-	int peerlen = sizeof(*peer);
-
-	const int ZERO_FLAG = 0;
-
-	if ( sendto(sock, message, sizeof(message), ZERO_FLAG, (struct sockaddr*)peer, peerlen) < 0 ) {
-		error(1, errno, "SENT_TO FUNCTION MISTAKE");
-	}
+	exit(0);
 }

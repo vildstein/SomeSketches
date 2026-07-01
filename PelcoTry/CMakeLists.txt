@@ -21,7 +21,7 @@ add_executable(${UDP_CLIENT_APP_NAME}
 	upd_functions.c
         ${FUNCS_DEPS_LIST}
 )
-target_link_libraries(${UDP_CLIENT_APP_NAME} PRIVATE curses)
+target_link_libraries(${UDP_CLIENT_APP_NAME} PRIVATE)
 target_compile_definitions(${UDP_CLIENT_APP_NAME} PRIVATE OS_DEFINED_CMAKE_LIN)
 message(STATUS "LINUX DEFINED")
 
