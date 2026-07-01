@@ -31,6 +31,11 @@ SOCKET udp_server(char* hostName, char* portName, struct sockaddr_in* local) {
 		error( 1, errno, "SOCKET FUNC MISTAKE");
 	}
 
+	const int on = 1;
+	if ( setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) ) ) {
+		error( 1, errno, "SET_SOCK_OPT FUNC MISTAKE");
+	}
+
 	if ( bind ( sock, (struct sockaddr*) local, sizeof(*local) ) ) {
 		error( 1, errno, "BIND FUNC MISTAKE");
 	}
