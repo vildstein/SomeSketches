@@ -1,9 +1,12 @@
 #include "skel_defines.h"
 
+#include <curses.h>
+
 ERROR_FORWARD_DECL
 UDP_CLIENT_FORWARD
 CLIENT_FUNC_FORWARD_DECL
 SET_ADDRESS_FORWARD_DECL
+
 
 static void goLeftMessage(SOCKET sock, SIN* peer);
 static void goRightMessage(SOCKET sock, SIN* peer);
@@ -23,7 +26,7 @@ int main( int argc, char** argv ) {
 
 	char ch;
 
-	do {
+	while ( TRUE ) {
 		ch = getchar();
 
 		if (ch == 'a') {
@@ -34,7 +37,9 @@ int main( int argc, char** argv ) {
 			stopMessage(sock, &peer);
 		}
 
-	} while (ch != 'z' || ch != 'x');
+	};
+
+	endwin();
 
 	EXIT(0);
 }
@@ -91,12 +96,14 @@ static void goRightMessage(SOCKET sock, SIN* peer) {
 	message[1] = deviceIdByte;
 
 	// Command 1
-	char Command_1_Byte = 0x00; // Sense Reserved Reserved Auto/ Manual Scan Camera On/Off Iris Close Iris Open Focus Near
+	// Sense Reserved Reserved Auto/ Manual Scan Camera On/Off Iris Close Iris Open Focus Near
+	char Command_1_Byte = 0x00;
 	message[2] = Command_1_Byte;
 
 	// Command 2
 	// 0 0 0 0. 0 0 1 0
-	char Command_2_Byte = 0x02; //Command 2 Focus_Far Zoom_Wide Zoom_Tele Tilt_Down Tilt_Up Pan_Left Pan_Right Fixed_to_0
+	//Command 2 Focus_Far Zoom_Wide Zoom_Tele Tilt_Down Tilt_Up Pan_Left Pan_Right Fixed_to_0
+	char Command_2_Byte = 0x02;
 	message[3] = Command_2_Byte;
 
 	// Pan speed
@@ -117,8 +124,6 @@ static void goRightMessage(SOCKET sock, SIN* peer) {
 	if ( sendto(sock, message, sizeof(message), ZERO_FLAG, (struct sockaddr*)peer, peerlen) < 0 ) {
 		error(1, errno, "SENT_TO FUNCTION MISTAKE");
 	}
-
-
 }
 
 static void stopMessage(SOCKET sock, SIN* peer) {
@@ -158,5 +163,4 @@ static void stopMessage(SOCKET sock, SIN* peer) {
 	if ( sendto(sock, message, sizeof(message), ZERO_FLAG, (struct sockaddr*)peer, peerlen) < 0 ) {
 		error(1, errno, "SENT_TO FUNCTION MISTAKE");
 	}
-
 }
