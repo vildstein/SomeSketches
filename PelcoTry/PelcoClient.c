@@ -16,7 +16,6 @@ UDP_CLIENT_FORWARD
 UDP_SERVER_FORWARD
 CLIENT_FUNC_FORWARD_DECL
 SET_ADDRESS_FORWARD_DECL
-int readvrec(SOCKET socDescriptor, char* bufferToRead, size_t messageLenght);
 
 #define MAXLINE 4048
 int daemon_proc;
@@ -200,7 +199,7 @@ static void err_doit(int errnoflag, int level, const char* fmt, va_list ap) {
 #ifdef  HAVE_VSNPRINTF
 	vsnprintf(buf, MAXLINE, fmt, ap);       /* safe */
 #else
-	vsprintf(buf, fmt, ap);                          /* not safe */
+	vsprintf(buf, fmt, ap);                 /* not safe */
 #endif
 	n = strlen(buf);
 	if (errnoflag) {
@@ -500,7 +499,6 @@ static void stopMessage(SOCKET sock, SIN* peer) {
 
 	char checkSum_Byte = deviceIdByte + Command_1_Byte + Command_2_Byte + data_1_Byte + data_2_Byte;
 	message[6] = checkSum_Byte;
-
 	int peerlen = sizeof(*peer);
 
 	const int ZERO_FLAG = 0;

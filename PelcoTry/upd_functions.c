@@ -23,9 +23,8 @@ SOCKET udp_client(char* hostName, char* portName, struct sockaddr_in* sp) {
 SOCKET udp_server(char* hostName, char* portName, struct sockaddr_in* local) {
 
 	SOCKET sock;
-	char* protocol = {"udp"};
 
-	set_address( hostName, portName, local, protocol );
+	set_address( hostName, portName, local, "udp" );
 	sock = socket( AF_INET, SOCK_DGRAM, 0 );
 
 	if (!IS_VALID_SOCKET( sock )) {

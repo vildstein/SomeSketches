@@ -14,7 +14,7 @@ int readn(SOCKET socDescriptor, char* bufferToRead, size_t messageLenght) {
 	count = messageLenght;
 
 	while (count > 0) {
-		recived = recv(socDescriptor, bufferToRead,  count, 0);
+		recived = recv(socDescriptor, bufferToRead, count, MSG_NOSIGNAL);
 
 		if (recived < 0) {
 			if (errno == EINTR) {
@@ -24,7 +24,7 @@ int readn(SOCKET socDescriptor, char* bufferToRead, size_t messageLenght) {
 		}
 
 		if (recived == 0) {
-			return 	messageLenght - count;
+			return (messageLenght - count);
 		}
 
 		bufferToRead += recived;
@@ -42,9 +42,9 @@ int readvrec(SOCKET socDescriptor, char* bufferToRead, size_t messageLenght) {
 	int recived = 0;
 
 	// read record lenght
-	recived = readn(socDescriptor, bufferToRead, messageLenght);
+	recived = readn(socDescriptor, (char*) &recLenght, sizeof(recLenght));
 
-	if (recived != sizeof(u_int32_t)) {
+	if ( recived != sizeof(u_int32_t) ) {
 		return recived < 0 ? -1 : 0;
 	}
 
