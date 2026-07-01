@@ -50,6 +50,7 @@ typedef struct sockaddr_in SIN; //#define SIN struct sockaddr_in
 #define TCP_CLIENT_FORWARD SOCKET tcp_client(char* hostName, char* portName);
 #define UDP_SERVER_FORWARD SOCKET udp_server(char* hostName, char* portName, struct sockaddr_in* local);
 #define UDP_CLIENT_FORWARD SOCKET udp_client(char* hostName, char* portName, struct sockaddr_in* sp);
+#define READ_V_REC_FORWARD int readvrec(SOCKET socDescriptor, char* bufferToRead, size_t messageLenght);
 
 //#define PROGRAM_NAME char* program_name;
 

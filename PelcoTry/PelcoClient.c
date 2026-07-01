@@ -13,14 +13,18 @@
 
 ERROR_FORWARD_DECL
 UDP_CLIENT_FORWARD
+UDP_SERVER_FORWARD
 CLIENT_FUNC_FORWARD_DECL
 SET_ADDRESS_FORWARD_DECL
+int readvrec(SOCKET socDescriptor, char* bufferToRead, size_t messageLenght);
 
 #define MAXLINE 4048
 int daemon_proc;
 
 static void goLeftMessage(SOCKET sock, SIN* peer);
 static void goRightMessage(SOCKET sock, SIN* peer);
+static void goUpMessage(SOCKET sock, SIN* peer);
+static void goDownMessage(SOCKET sock, SIN* peer);
 static void stopMessage(SOCKET sock, SIN* peer);
 
 static struct termios save_termios;
@@ -240,7 +244,7 @@ static int isStoped = TRUE;
 
 int main( int argc, char** argv ) {
 
-	SIN peer;
+	SIN client;
 	SOCKET sock;
 
 	char* host = "192.168.2.93";
@@ -250,7 +254,6 @@ int main( int argc, char** argv ) {
 	const char* const right = "Right";
 	const char* const up = "Up";
 	const char* const down = "Down";
-
 
 	INIT();
 
@@ -267,7 +270,7 @@ int main( int argc, char** argv ) {
 		err_sys("ошибка вызова функции signal(SIGTERM)");
 	}
 
-	sock = udp_client(host, portNumber, &peer);
+	sock = udp_client(host, portNumber, &client);
 
 	int i;
 	char ch;
@@ -280,19 +283,22 @@ int main( int argc, char** argv ) {
 	while ((i = read(STDIN_FILENO, &ch, 1)) == 1) {
 		if (ch == 'a' || ch == 'A') {
 			printf("%s\n", left);
-			goLeftMessage(sock, &peer);
-			//stopMessage(sock, &peer);
+			goLeftMessage(sock, &client);
 		} else if (ch == 'd' || ch == 'D') {
 			printf("%s\n", right);
-			goRightMessage(sock, &peer);
-			//stopMessage(sock, &peer);
+			goRightMessage(sock, &client);
 		} else if (ch == 'w' || ch == 'W') {
 			printf("%s\n", up);
+			goUpMessage(sock, &client);
 		} else if (ch == 's' || ch == 'S') {
 			printf("%s\n", down);
+			goDownMessage(sock, &client);
 		} else {
-			stopMessage(sock, &peer);
+			stopMessage(sock, &client);
 			ch &= 255;
+			if (ch == 27) {
+				EXIT(0);
+			}
 			printf("%o\n", ch);
 		}
 	}
@@ -311,13 +317,13 @@ static void goLeftMessage(SOCKET sock, SIN* peer) {
 	message[1] = deviceIdByte;
 
 	// Command 1
-	// Sense Reserved Reserved Auto/ Manual Scan Camera On/Off Iris Close Iris Open Focus Near
+	// Sense[7] Reserved[6] Reserved[5] Auto_Manual_Scan[4] Camera_On_Off[3] Iris_Close[2] Iris_Open[1] Focus_Near[0]
 	char Command_1_Byte = 0x00;
 	message[2] = Command_1_Byte;
 
 	// Command 2
 	// 0 0 0 0. 0 1 0 0
-	//Command 2 Focus_Far Zoom_Wide Zoom_Tele Tilt_Down Tilt_Up Pan_Left Pan_Right Fixed_to_0
+	// Focus_Far[7] Zoom_Wide[6] Zoom_Tele[5] Tilt_Down[4] Tilt_Up[3] Pan_Left[2] Pan_Right[1] Fixed_to_0[0]
 	char Command_2_Byte = 0x4;
 	message[3] = Command_2_Byte;
 
@@ -352,13 +358,13 @@ static void goRightMessage(SOCKET sock, SIN* peer) {
 	message[1] = deviceIdByte;
 
 	// Command 1
-	// Sense Reserved Reserved Auto/ Manual Scan Camera On/Off Iris Close Iris Open Focus Near
+	// Sense[7] Reserved[6] Reserved[5] Auto_Manual_Scan[4] Camera_On_Off[3] Iris_Close[2] Iris_Open[1] Focus_Near[0]
 	char Command_1_Byte = 0x00;
 	message[2] = Command_1_Byte;
 
 	// Command 2
 	// 0 0 0 0. 0 0 1 0
-	//Command 2 Focus_Far Zoom_Wide Zoom_Tele Tilt_Down Tilt_Up Pan_Left Pan_Right Fixed_to_0
+	// Focus_Far[7] Zoom_Wide[6] Zoom_Tele[5] Tilt_Down[4] Tilt_Up[3] Pan_Left[2] Pan_Right[1] Fixed_to_0[0]
 	char Command_2_Byte = 0x02;
 	message[3] = Command_2_Byte;
 
@@ -382,6 +388,87 @@ static void goRightMessage(SOCKET sock, SIN* peer) {
 	}
 }
 
+static void goUpMessage(SOCKET sock, SIN* peer) {
+
+	const size_t messageSize = 7; // Bytes
+	char message[messageSize];
+	char firstByte = 0xff;
+	message[0] = firstByte;
+	char deviceIdByte = 0x01; // device Id
+	message[1] = deviceIdByte;
+
+	// Command 1
+	// Sense[7] Reserved[6] Reserved[5] Auto_Manual_Scan[4] Camera_On_Off[3] Iris_Close[2] Iris_Open[1] Focus_Near[0]
+	char Command_1_Byte = 0x00;
+	message[2] = Command_1_Byte;
+
+	// Command 2
+	// Focus_Far[7] Zoom_Wide[6] Zoom_Tele[5] Tilt_Down[4] Tilt_Up[3] Pan_Left[2] Pan_Right[1] Fixed_to_0[0]
+	// 0 0 0 1. 0 0 0 0
+	char Command_2_Byte = 0x10;
+	message[3] = Command_2_Byte;
+
+	// Pan speed
+	char data_1_Byte = 0x00;
+	message[4] = data_1_Byte;
+
+	// Tilt speed
+	char data_2_Byte = 0x2d;
+	message[5] = data_2_Byte;
+
+	char checkSum_Byte = deviceIdByte + Command_1_Byte + Command_2_Byte + data_1_Byte + data_2_Byte;
+	message[6] = checkSum_Byte;
+
+	int peerlen = sizeof(*peer);
+
+	const int ZERO_FLAG = 0;
+
+	if ( sendto(sock, message, sizeof(message), ZERO_FLAG, (struct sockaddr*)peer, peerlen) < 0 ) {
+		error(1, errno, "SENT_TO FUNCTION MISTAKE");
+	}
+}
+
+static void goDownMessage(SOCKET sock, SIN* peer) {
+
+	const size_t messageSize = 7; // Bytes
+	char message[messageSize];
+	char firstByte = 0xff;
+	message[0] = firstByte;
+	char deviceIdByte = 0x01; // device Id
+	message[1] = deviceIdByte;
+
+	// Command 1
+	// Sense[7] Reserved[6] Reserved[5] Auto_Manual_Scan[4] Camera_On_Off[3] Iris_Close[2] Iris_Open[1] Focus_Near[0]
+	char Command_1_Byte = 0x00;
+	message[2] = Command_1_Byte;
+
+	// Command 2
+	// Focus_Far[7] Zoom_Wide[6] Zoom_Tele[5] Tilt_Down[4] Tilt_Up[3] Pan_Left[2] Pan_Right[1] Fixed_to_0[0]
+	// 0 0 0 0. 1 0 0 0
+	char Command_2_Byte = 0x08;
+	message[3] = Command_2_Byte;
+
+	// Pan speed
+	char data_1_Byte = 0x00;
+	message[4] = data_1_Byte;
+
+	// Tilt speed
+	char data_2_Byte = 0x2d;
+	message[5] = data_2_Byte;
+
+	char checkSum_Byte = deviceIdByte + Command_1_Byte + Command_2_Byte + data_1_Byte + data_2_Byte;
+	message[6] = checkSum_Byte;
+
+	int peerlen = sizeof(*peer);
+
+	const int ZERO_FLAG = 0;
+
+	if ( sendto(sock, message, sizeof(message), ZERO_FLAG, (struct sockaddr*)peer, peerlen) < 0 ) {
+		error(1, errno, "SENT_TO FUNCTION MISTAKE");
+	}
+}
+
+
 static void stopMessage(SOCKET sock, SIN* peer) {
 
 	const size_t messageSize = 7; // Bytes
@@ -393,12 +480,14 @@ static void stopMessage(SOCKET sock, SIN* peer) {
 	message[1] = deviceIdByte;
 
 	// Command 1
-	char Command_1_Byte = 0x00; // Sense Reserved Reserved Auto/ Manual Scan Camera On/Off Iris Close Iris Open Focus Near
+	// Sense[7] Reserved[6] Reserved[5] Auto_Manual_Scan[4] Camera_On_Off[3] Iris_Close[2] Iris_Open[1] Focus_Near[0]
+	char Command_1_Byte = 0x00;
 	message[2] = Command_1_Byte;
 
-	// Command 2
+	// Command 2	
+	// Focus_Far[7] Zoom_Wide[6] Zoom_Tele[5] Tilt_Down[4] Tilt_Up[3] Pan_Left[2] Pan_Right[1] Fixed_to_0[0]
 	// 0 0 0 0. 0 0 0 0
-	char Command_2_Byte = 0x00; //Command 2 Focus_Far Zoom_Wide Zoom_Tele Tilt_Down Tilt_Up Pan_Left Pan_Right Fixed_to_0
+	char Command_2_Byte = 0x00;
 	message[3] = Command_2_Byte;
 
 	// Pan speed
@@ -420,3 +509,4 @@ static void stopMessage(SOCKET sock, SIN* peer) {
 		error(1, errno, "SENT_TO FUNCTION MISTAKE");
 	}
 }
+
