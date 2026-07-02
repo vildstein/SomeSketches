@@ -8,6 +8,10 @@ fn main() -> std::io::Result<()> {
 
     modyfy_array(&mut buf);
 
+    for el in &buf {
+        println!("{}", el);
+    }
+
     udp_socket.send(&buf).expect("really !?");        
     
     Ok(())

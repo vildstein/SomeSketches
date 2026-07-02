@@ -241,13 +241,38 @@ static void sig_catch(int signo) {
 
 static int isStoped = TRUE;
 
+// "192.168.2.93"
+
+static int panSpeedInitial = 0x3F;
+
+void plusPanSpeed() {
+	++panSpeedInitial;
+	printf("Pan speed is dec = %d, HEX = %x\n", panSpeedInitial, panSpeedInitial);
+}
+
+void minusPanSpeed() {
+	--panSpeedInitial;
+	printf("Pan speed is dec = %d, HEX = %x\n", panSpeedInitial, panSpeedInitial);
+}
+
 int main( int argc, char** argv ) {
 
 	SIN client;
 	SOCKET sock;
 
-	char* host = "192.168.2.93";
-	char* portNumber = "6000";
+	//char* host = "192.168.2.93";
+	char* host = "127.0.0.1";
+	char* portNumber = "7500";
+
+	if (argc == 2) {
+		portNumber = argv[1];
+	} else if (argc == 3) {
+		host = argv[1];
+		portNumber = argv[2];
+	}
+
+	printf("host dedined as %s\n", host);
+	printf("port dedined as %s\n", portNumber);
 
 	const char* const left = "Left";
 	const char* const right = "Right";
@@ -292,6 +317,12 @@ int main( int argc, char** argv ) {
 		} else if (ch == 's' || ch == 'S') {
 			printf("%s\n", down);
 			goDownMessage(sock, &client);
+		} else if (ch == 43 || ch == 61) {
+			printf("PLUS Pan Speed");
+			plusPanSpeed();
+		} else if (ch == 45) {
+			printf("MINUS Pan Speed");
+			minusPanSpeed();
 		} else {
 			stopMessage(sock, &client);
 			ch &= 255;
@@ -327,7 +358,7 @@ static void goLeftMessage(SOCKET sock, SIN* peer) {
 	message[3] = Command_2_Byte;
 
 	// Pan speed
-	char data_1_Byte = 0x3F;
+	char data_1_Byte = (char) panSpeedInitial;
 	message[4] = data_1_Byte;
 
 	// Tilt speed
@@ -368,7 +399,7 @@ static void goRightMessage(SOCKET sock, SIN* peer) {
 	message[3] = Command_2_Byte;
 
 	// Pan speed
-	char data_1_Byte = 0x3F;
+	char data_1_Byte = (char) panSpeedInitial;;
 	message[4] = data_1_Byte;
 
 	// Tilt speed
