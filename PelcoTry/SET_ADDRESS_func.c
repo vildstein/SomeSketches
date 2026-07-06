@@ -10,7 +10,7 @@ void set_address(char* hostName, char* portNumber, SIN* sap, char* protocol) {
 	struct servent* sp;
 	struct hostent* hp;
 	char* endPtr;
-	short port;
+	long int port;
 
 	BZERO_SOCK_ADDR_IN_STRUCT(sap)
 
@@ -32,7 +32,7 @@ void set_address(char* hostName, char* portNumber, SIN* sap, char* protocol) {
 		sap->sin_addr.s_addr = htonl( INADDR_ANY );
 	}
 
-	port = (short)strtol(portNumber, &endPtr, 0 );
+	port = strtol(portNumber, &endPtr, 0 );
 
 	if (*endPtr == '\0') {
 		sap->sin_port = htons( port );

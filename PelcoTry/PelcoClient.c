@@ -30,7 +30,6 @@ static struct termios save_termios;
 static int ttysavefd = -1;
 static enum { RESET, RAW, CBREAK } ttystate = RESET;
 
-
 /* перевести терминал в режим посимвольного ввода */
 int tty_cbreak(int fd)
 {
@@ -271,8 +270,8 @@ int main( int argc, char** argv ) {
 		portNumber = argv[2];
 	}
 
-	printf("host dedined as %s\n", host);
-	printf("port dedined as %s\n", portNumber);
+	printf("host defined as %s\n", host);
+	printf("port defined as %s\n", portNumber);
 
 	const char* const left = "Left";
 	const char* const right = "Right";
