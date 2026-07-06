@@ -340,9 +340,12 @@ static void goLeftMessage(SOCKET sock, SIN* peer) {
 	const size_t messageSize = 7; // Bytes
 	char message[messageSize];
 
+	// HEADER
 	char firstByte = 0xff;
 	message[0] = firstByte;
-	char deviceIdByte = 0x01; // device Id
+
+	// device Id
+	char deviceIdByte = 0x01;
 	message[1] = deviceIdByte;
 
 	// Command 1
