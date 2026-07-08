@@ -24,6 +24,9 @@ int main( int argc, char** argv ) {
 
 	if (argc == 2) {
 		portNumber = argv[1];
+	} else if (argc == 3) {
+		host = argv[1];
+		portNumber = argv[2];
 	}
 
 	printf("port defined as %s\n", portNumber);
