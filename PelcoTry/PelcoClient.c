@@ -41,7 +41,7 @@ SET_ADDRESS_FORWARD_DECL
 	}
 
 #define INIT_CHECK_SUMM \
-	unsigned char checkSum_Byte = (deviceIdByte + Command_1_Byte + Command_2_Byte + data_1_Byte + data_2_Byte) % 256; \
+	unsigned char checkSum_Byte = (message[1] + message[2] + message[3] + message[4] + message[5]) % 256; \
 	message[6] = checkSum_Byte;
 
 static void goLeftMessage(SOCKET sock, SIN* peer);
@@ -69,12 +69,14 @@ void err_sys(const char* fmt, ...);
 
 /* позволить вызывающему процессу */
 /* узнать начальное состояние терминала */
-struct termios *tty_termios(void);
-
-//static int isStoped = TRUE;
+struct termios* tty_termios(void);
 
 static int panSpeedInitial = 0x3F;
 static const char ZERO_BYTE = 0x00;
+static const char GO_LEFT_COMMAND_BYTE = 0x04;
+static const char GO_RIGHT_COMMAND_BYTE = 0x02;
+static const char GO_UP_COMMAND_BYTE = 0x10;
+static const char GO_DOWN_COMMAND_BYTE = 0x08;
 static const char FIRST_BYTE_HEADER = 0xFF;
 static const char DEVICE_ID_BYTE = 0x01;
 static const char SET_PAN_POSITION = 0x4b;
@@ -94,6 +96,7 @@ void minusPanSpeed() {
 }
 
 static unsigned short azimutht = 0;
+static unsigned short device_ratio = 110;
 
 static void plusAz() {
 
@@ -201,18 +204,17 @@ int main( int argc, char** argv ) {
 		} else if (ch == 'z' || ch == 'Z') {
 			printf("%s\n", query_Diagnostic_Information_Response);
 			queryDiagnosticInformationResponseMessage(sock, &client);
-		}
-		else if (ch == 'p' || ch == 'P') {
+		} else if (ch == 'p' || ch == 'P') {
 			printf("%s\n", setPanPos);
 			setPanPositionMessage(sock, &client);
 		} else if (ch == 'x' || ch == 'X') {
 			printf("%s\n", query_Pan_Position);
-			queryPanPositionMessage(sock, &client);
+			queryPanPositionMessage(sock, &client); //setPanPositionMessage BI
 			readPanPositionAnswer(sock);
-		} else if (ch == 49) {
+		} else if (ch == 49) { //1
 			printf("%s\n", azimuthMinus);
 			minusAz();
-		} else if (ch == 50) {
+		} else if (ch == 50) { //2
 			printf("%s\n", azimuthPlus);
 			plusAz();
 		} else {
@@ -237,7 +239,7 @@ static void goLeftMessage(SOCKET sock, SIN* peer) {
 	// Command 2
 	// 0 0 0 0. 0 1 0 0
 	// Focus_Far[7] Zoom_Wide[6] Zoom_Tele[5] Tilt_Down[4] Tilt_Up[3] Pan_Left[2] Pan_Right[1] Fixed_to_0[0]
-	BYTE Command_2_Byte = 0x4;
+	BYTE Command_2_Byte = GO_LEFT_COMMAND_BYTE;
 	message[3] = Command_2_Byte;
 
 	// Pan speed
@@ -261,15 +263,15 @@ static void goRightMessage(SOCKET sock, SIN* peer) {
 	// Command 2
 	// 0 0 0 0. 0 0 1 0
 	// Focus_Far[7] Zoom_Wide[6] Zoom_Tele[5] Tilt_Down[4] Tilt_Up[3] Pan_Left[2] Pan_Right[1] Fixed_to_0[0]
-	BYTE Command_2_Byte = 0x02;
+	BYTE Command_2_Byte = GO_RIGHT_COMMAND_BYTE;
 	message[3] = Command_2_Byte;
 
 	// Pan speed
-	BYTE data_1_Byte = (char) panSpeedInitial;;
+	BYTE data_1_Byte = (char) panSpeedInitial;
 	message[4] = data_1_Byte;
 
 	// Tilt speed
-	BYTE data_2_Byte = 0x00;
+	BYTE data_2_Byte = ZERO_BYTE;
 	message[5] = data_2_Byte;
 
 	INIT_CHECK_SUMM
@@ -285,7 +287,7 @@ static void goUpMessage(SOCKET sock, SIN* peer) {
 	// Command 2
 	// Focus_Far[7] Zoom_Wide[6] Zoom_Tele[5] Tilt_Down[4] Tilt_Up[3] Pan_Left[2] Pan_Right[1] Fixed_to_0[0]
 	// 0 0 0 1. 0 0 0 0
-	BYTE Command_2_Byte = 0x10;
+	BYTE Command_2_Byte = GO_UP_COMMAND_BYTE;
 	message[3] = Command_2_Byte;
 
 	// Pan speed
@@ -310,11 +312,11 @@ static void goDownMessage(SOCKET sock, SIN* peer) {
 	// Command 2
 	// Focus_Far[7] Zoom_Wide[6] Zoom_Tele[5] Tilt_Down[4] Tilt_Up[3] Pan_Left[2] Pan_Right[1] Fixed_to_0[0]
 	// 0 0 0 0. 1 0 0 0
-	BYTE Command_2_Byte = 0x08;
+	BYTE Command_2_Byte = GO_DOWN_COMMAND_BYTE;
 	message[3] = Command_2_Byte;
 
 	// Pan speed
-	BYTE data_1_Byte = 0x00;
+	BYTE data_1_Byte = ZERO_BYTE;
 	message[4] = data_1_Byte;
 
 	// Tilt speed
@@ -336,15 +338,15 @@ static void stopMessage(SOCKET sock, SIN* peer) {
 	// Command 2	
 	// Focus_Far[7] Zoom_Wide[6] Zoom_Tele[5] Tilt_Down[4] Tilt_Up[3] Pan_Left[2] Pan_Right[1] Fixed_to_0[0]
 	// 0 0 0 0. 0 0 0 0
-	BYTE Command_2_Byte = 0x00;
+	BYTE Command_2_Byte = ZERO_BYTE;
 	message[3] = Command_2_Byte;
 
 	// Pan speed
-	BYTE data_1_Byte = 0x00;
+	BYTE data_1_Byte = ZERO_BYTE;
 	message[4] = data_1_Byte;
 
 	// Tilt speed
-	BYTE data_2_Byte = 0x00;
+	BYTE data_2_Byte = ZERO_BYTE;
 	message[5] = data_2_Byte;
 
 	INIT_CHECK_SUMM
@@ -354,17 +356,13 @@ static void stopMessage(SOCKET sock, SIN* peer) {
 
 static void setPanPositionMessage(SOCKET sock, SIN* peer) {
 
-	BYTE azMsByte = 0;
-	BYTE azLsByte = 0;
-
-	unsigned short valToBeChangedForMsByte = azimutht * 110;
+	unsigned short valToBeChangedForMsByte = azimutht * 100;//devie_ratio;
 	unsigned short valToBeChangedForLsByte = azimutht;
 
-	//azLsByte = (BYTE) valToBeChangedForLsByte;
-	azLsByte = (BYTE) valToBeChangedForLsByte;
+	const BYTE AZ_LSB = (BYTE) valToBeChangedForLsByte;
 
 	valToBeChangedForMsByte >>= 8;
-	azMsByte = (BYTE) valToBeChangedForMsByte;
+	const BYTE AZ_MSB = (BYTE) valToBeChangedForMsByte;
 
 	INIT_DATA
 	COMMAND_1_ZERO_BYTE
@@ -373,11 +371,11 @@ static void setPanPositionMessage(SOCKET sock, SIN* peer) {
 	message[3] = Command_2_Byte;
 
 	// MS Byte
-	BYTE data_1_Byte = 0x13;//azMsByte;
+	BYTE data_1_Byte = AZ_MSB;
 	message[4] = data_1_Byte;
 
 	// LS Byte
-	BYTE data_2_Byte = 0x88;//azLsByte;
+	BYTE data_2_Byte = AZ_LSB;
 	message[5] = data_2_Byte;
 
 	INIT_CHECK_SUMM
@@ -409,7 +407,7 @@ static void queryDiagnosticInformationResponseMessage(SOCKET sock, SIN* peer) {
 	BYTE azMsByte = 0;
 	BYTE azLsByte = 0;
 
-	unsigned short valToBeChangedForMsByte = azimutht * 110;
+	unsigned short valToBeChangedForMsByte = azimutht * device_ratio;
 	unsigned short valToBeChangedForLsByte = azimutht;
 
 	azLsByte = (BYTE) valToBeChangedForLsByte;
@@ -417,22 +415,20 @@ static void queryDiagnosticInformationResponseMessage(SOCKET sock, SIN* peer) {
 	valToBeChangedForMsByte >>= 8;
 	azMsByte = (BYTE) valToBeChangedForMsByte;
 
-
 	INIT_DATA
 	// Response 1
 	COMMAND_1_ZERO_BYTE
 	// Response 2
 	BYTE Command_2_Byte = QUERY_DIAGNOSTIC_INFORMATIOM_RESPONSE; //0x71
 	message[3] = Command_2_Byte;
-	// Pan speed
-	BYTE data_1_Byte = azMsByte;//ZERO_BYTE;
+
+	BYTE data_1_Byte = azMsByte;
 	message[4] = data_1_Byte;
 
-	BYTE data_2_Byte = azLsByte;//ZERO_BYTE;
+	BYTE data_2_Byte = azLsByte;
 	message[5] = data_2_Byte;
 
 	INIT_CHECK_SUMM
-
 	SEND_TO
 }
 
@@ -456,7 +452,7 @@ static void queryPanPositionMessage(SOCKET sock, SIN* peer) {
 }
 
 static void tryToListen(SOCKET sock, const char* const query) {
-
+// Pan speed
 	const int ZERO_FLAG = 0;
 	const size_t mesgLen = 7;
 	BYTE msg[mesgLen];
