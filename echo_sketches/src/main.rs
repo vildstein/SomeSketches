@@ -67,7 +67,7 @@ fn send_dgram(udp_sock : &UdpSocket) -> Result<usize, Error> {
 
 fn try_recv(udp_sock : &UdpSocket)  {
 
-    let mut buf: [u8; 7] = [0; 7];
+    let mut buf: [u8; 128] = [0; 128];
 
     let recv_res = udp_sock.recv(&mut buf);
 
