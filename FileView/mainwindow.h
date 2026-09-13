@@ -33,7 +33,7 @@ private:
 
 	QFileSystemModel* m_fileSystemModel{nullptr};
 	QTableWidget* m_tableWidget{nullptr};
-	QTreeView* m_treeView{nullptr};
+	//QTreeView* m_treeView{nullptr};
 	QLabel* m_statusBarLabel{nullptr};
 
 	QString m_upDir;

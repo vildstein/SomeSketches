@@ -4,6 +4,7 @@
 #include <QToolBar>
 #include <QStatusBar>
 #include <QLabel>
+#include <QQuickWidget>
 
 #include <QDir>
 #include <QFileSystemModel>
@@ -23,7 +24,6 @@
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
-
 	auto leftDock = createLeftDockWidget();
 	addDockWidget(Qt::LeftDockWidgetArea, leftDock);
 
@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::onDirLoaded(const QString& dir)
 {
-	qInfo() << dir;
+	//qInfo() << dir;
 
 	QDir currentDir(dir);
 	auto dirList = currentDir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot);
@@ -49,7 +49,7 @@ void MainWindow::onDirLoaded(const QString& dir)
 		m_upDir = currentDir.absolutePath();
 	}
 
-	qInfo() << dirList;
+	//qInfo() << dirList;
 
 	int row{0};
 	int column{0};
@@ -90,25 +90,24 @@ void MainWindow::showHomeDir()
 {
 	onDirLoaded(QDir::homePath());
 
-	auto homeIndex = m_fileSystemModel->index(QDir::homePath());
+	//auto homeIndex = m_fileSystemModel->index(QDir::homePath());
 
-	if (homeIndex.isValid()) {
-		m_treeView->expand(homeIndex);
-		m_treeView->scrollTo(homeIndex);
-		m_treeView->resizeColumnToContents(0);
-	}
-
+	// if (homeIndex.isValid()) {
+	// 	m_treeView->expand(homeIndex);
+	// 	m_treeView->scrollTo(homeIndex);
+	// 	m_treeView->resizeColumnToContents(0);
+	// }
 }
 
 void MainWindow::goUpDir()
 {
 	auto upDirIndex = m_fileSystemModel->index(m_upDir);
 
-	if (upDirIndex.isValid()) {
-		m_treeView->expand(upDirIndex);
-		m_treeView->scrollTo(upDirIndex);
-		m_treeView->resizeColumnToContents(0);
-	}
+	// if (upDirIndex.isValid()) {
+	// 	m_treeView->expand(upDirIndex);
+	// 	m_treeView->scrollTo(upDirIndex);
+	// 	m_treeView->resizeColumnToContents(0);
+	// }
 
 	m_tableWidget->clear();
 
@@ -119,29 +118,37 @@ MainWindow::~MainWindow() = default;
 
 QDockWidget* MainWindow::createLeftDockWidget()
 {
-	m_treeView = new QTreeView;
+	// m_treeView = new QTreeView;
 
-	m_fileSystemModel = new QFileSystemModel;
+	// m_fileSystemModel = new QFileSystemModel;
 
-	m_treeView->setModel(m_fileSystemModel);
-	m_treeView->setColumnHidden(1, true);
-	m_treeView->setColumnHidden(2, true);
-	m_treeView->setColumnHidden(3, true);
-	m_fileSystemModel->setRootPath(QDir::homePath());
+	// m_treeView->setModel(m_fileSystemModel);
+	// m_treeView->setColumnHidden(1, true);
+	// m_treeView->setColumnHidden(2, true);
+	// m_treeView->setColumnHidden(3, true);
+	// m_fileSystemModel->setRootPath(QDir::homePath());
 
-	m_treeView->setHeaderHidden(true);
+	// m_treeView->setHeaderHidden(true);
 
-	//auto homeIndex = m_fileSystemModel->index(QDir::homePath());
+	// //auto homeIndex = m_fileSystemModel->index(QDir::homePath());
 
-	//if (homeIndex.isValid()) {
-	//	treeView->expand(homeIndex);
-	//	treeView->scrollTo(homeIndex);
-	//}
+	// //if (homeIndex.isValid()) {
+	// //	treeView->expand(homeIndex);
+	// //	treeView->scrollTo(homeIndex);
+	// //}
+
+
+	auto quickWidget = new QQuickWidget;
+	quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
+	quickWidget->resize(QSize(200, 200));
+	//":/icons/radio.svg"
+	QUrl dwRes("qrc:Qml_Files/LeftDockWidget.qml");
+	quickWidget->setSource(dwRes);
 
 	auto dockWidget = new QDockWidget(this);
 	dockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
 
-	dockWidget->setWidget(m_treeView);
+	dockWidget->setWidget(quickWidget);
 
 	return dockWidget;
 }
